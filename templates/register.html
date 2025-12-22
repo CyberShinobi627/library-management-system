@@ -7,17 +7,21 @@
 </head>
 <body>
     <h1>Register</h1>
-    <h2>{{hello}}</h2>
-    <form action="/user-pass" method="post">
-        <label>Enter your fullname:</label>
-        <input type="text" name="fname" required><br><br>
-        <!-- <label>Enter your address</label>
-        <input type="text" name="address"> -->
-        <label>Enter your phone no:</label>
-        <input type="text" name="phone" required><br><br>
-        <label>Enter your E-mail:</label>
-        <input type="email" name="mail" required><br><br>
-        <button type="submit">Submit</button>
-    </form>
+    {% with messages = get_flashed_messages() %}
+        <p style="color: red;">{{ messages[1] if messages }}</p>
+        <form action="#" method="post">
+            <label>Enter your first name:</label>
+            <input type="text" name="fname" value="{{ messages[0][0] if messages }}" required><br><br>
+            <label>Enter your last name:</label>
+            <input type="text" name="lname" value="{{ messages[0][1] if messages }}" required><br><br>
+            <label>Enter your E-mail:</label>
+            <input type="email" name="email" value="{{ messages[0][2] if messages }}" required><br><br>
+            <label>Create a username:</label>
+            <input type="text" name="username" required><br><br>
+            <label>Create a password:</label>
+            <input type="password" name="password" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    {% endwith %}
 </body>
 </html>

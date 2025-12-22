@@ -7,11 +7,15 @@
 </head>
 <body>
     <h1>Login</h1>
-    <form action="" method="post">
-        <label>Enter your Member Id:</label>
-        <input type="text">
+    {% with messages = get_flashed_messages()[0] %}
+        <p style="color: red;">{{ messages }}</p>
+    {% endwith %}
+    <form action="#" method="post">
+        <label>Enter your Username:</label>
+        <input type="text" name="username" required><br><br>
         <label>Enter your Password:</label>
-        <input type="password">
+        <input type="password" name="password" required><br><br>
+        <button type="submit">submit</button>
     </form>
 </body>
 </html>

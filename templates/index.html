@@ -3,11 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library</title>
+    <title>Tech Subho Library</title>
+    <style>
+        .nav-right{
+            float: right;
+        }
+    </style>
 </head>
 <body>
+    <div class="nav-right">
+        {% if valid_user %}
+            <a href="/profile">profile</a>
+        {% else %}
+            <a href="/register">Register</a>
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+    
     <h1>Welcome to Tech Subho Library</h1>
-    <a href="/register">Register</a>
-    <a href="/login">Login</a>
+    {% with messages = get_flashed_messages() %}
+        <p style="color: green;">{{ messages[0] }}</p>
+    {% endwith %}
+
 </body>
 </html>

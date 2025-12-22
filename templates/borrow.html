@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Check my Borrowings{% endblock %}</title>
+    {% block style %}<link rel="stylesheet" href="/css/borrow.css">{% endblock %}
+</head>
+<body>
+    {% block content %}
+        <h2>Borrow a Book</h2>
+        <div class="text-font">
+            <div class="search-book">
+                <label for="search-input">Search a book</label>
+                <input type="search" id="search-input">
+            </div><br><br>
+            <div class="all-books">
+                <template id="book-list">
+                    <div class="books">
+                        <div id="book-name"></div>
+                        <div id="book-author"></div><br>
+                        <button type="button">Add</button>
+                    </div>
+                </template>
+            </div>
+        </div>
+        <script src="/js/borrow.js" defer></script>
+    {% endblock %}
+</body>
+</html>

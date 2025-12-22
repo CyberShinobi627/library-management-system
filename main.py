@@ -2,80 +2,173 @@ from flask import (Flask,
                    render_template,
                    request,
                    redirect,
-                   url_for)
-import oracledb
+                   flash,
+                   jsonify)
 
-app = Flask(__name__, template_folder="templates")
+from flask_login import (LoginManager,
+                         UserMixin,
+                         login_user,
+                         logout_user,
+                         login_required,
+                         current_user)
 
-@app.route('/')
+from werkzeug.security import (generate_password_hash,
+                               check_password_hash)
+
+import sqlite3
+import datetime
+
+app = Flask(__name__, static_url_path='/')
+app.secret_key = "techsubho"
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+# login_manager.login_message = ''
+
+class User(UserMixin):
+    def __init__(self, uid, firstname, lastname, email, username, password, isadmin, iskeeper):
+        self.uid = uid
+        self.firstname = firstname
+        self.lastname = lastname
+        self.email = email
+        self.username = username
+        self.password = password
+        self.isadmin = isadmin
+        self.iskeeper = iskeeper
+    
+    def get_id(self):
+        return self.uid
+
+@login_manager.user_loader
+def load_user(uid):
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select * from users where uid = ?"
+        cur.execute(query, (uid,))
+
+        row = cur.fetchone()
+        cur.close()
+
+    return User(*row)
+
+@app.route('/', methods=("GET", "POST"))
 def index():
-    return render_template("index.html")
+    return render_template("index.html", valid_user=current_user.is_authenticated)
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/register/", methods=("GET", "POST"))
 def register():
-    if request.args:
-        var = request.args["hello"]
-        print(var)
+    if request.method == "POST":
+        user_data = request.form.values()
+        user_data = list(user_data)
+        user_data[4] = generate_password_hash(user_data[4])
+        # for val in user_data:
+        #     print(val)
+        
+        try:
+            with sqlite3.connect("library.db") as conn:
+                cur = conn.cursor()
+
+                query = "insert into users (firstname, lastname, email, username, password) values (?, ?, ?, ?, ?)"
+                # user_data = [val for val in user_data]
+                cur.execute(query, user_data)
+                conn.commit()
+                cur.close()
+            
+            flash("Successfully registered.")
+            return redirect('/')
+        
+        except sqlite3.IntegrityError:
+            flash(user_data)
+            flash("User already exist.")
+            # print(user_data)
+            return redirect("/register")
+    
     return render_template("register.html")
 
-# @app.route("/validate", methods=["GET", "POST"])
-# def validate():
-#     fname = request.form["fname"]
-#     phone = request.form["phone"]
-#     email = request.form["mail"]
-#     print(fname, phone, email)
-
-#     # connecting to database
-#     oracledb.init_oracle_client()
-
-#     conn = oracledb.connect(user="shinobi", password="ninja")
-#     cur = conn.cursor()
-
-#     query = "insert into registration values (:1, :2, :3, 'techsubho', 'helloworld')"
-#     cur.execute(query, [fname, phone, email])
-#     conn.commit()
-
-#     return render_template("validate.html")
-
-@app.route("/user-pass", methods=["GET", "POST"])
-def user_pass():
-    fname = request.form["fname"]
-    phone = request.form["phone"]
-    email = request.form["mail"]
-    # print(fname, phone, email)
-
-    return render_template("userpass.html", fname=fname, phone=phone, email=email)
-
-@app.route("/show-msg", methods=["GET", "POST"])
-def show_msg():
-    fname = request.form["fname"]
-    phone = request.form["phone"]
-    email = request.form["mail"]
-    uname = request.form["uname"]
-    passwd = request.form["passwd"]
-    repasswd = request.form["repasswd"]
-
-    if passwd != repasswd:
-        return redirect("/register", hello="world")
-
-    print(fname, phone, email, uname, passwd, repasswd)
-
-    # connecting to database
-    oracledb.init_oracle_client()
-
-    conn = oracledb.connect(user="shinobi", password="ninja")
-    cur = conn.cursor()
-
-    query = "insert into registration values (:1, :2, :3, :4, :5)"
-    cur.execute(query, [uname, passwd, fname, phone, email])
-    conn.commit()
-
-    return "<h1><center>registration successful</center></h1>"
-
-@app.route("/login")
+@app.route("/login/", methods=("GET", "POST"))
 def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            query = "select * from users where username = ?"
+            cur.execute(query, (username,))
+            row = cur.fetchone()
+            # print(row)
+
+            if row and check_password_hash(row[5], password):
+                new_user = User(*row)
+                login_user(new_user)
+                return redirect("/profile")
+            
+            else:
+                flash("Invalid credentials !!!")
+                return redirect("/login")
+    
+    elif current_user.is_authenticated:
+        return redirect("/profile")
+    
     return render_template("login.html")
 
+@app.route("/profile/", methods=("GET", "POST"))
+@login_required
+def profile():
+    return render_template("profile.html", username=current_user.username)
+
+@app.route("/profile/borrow-book/", methods=("GET", "POST"))
+@login_required
+def borrow_book():
+    # print(request.content_type)
+    if request.method == "POST":
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            query = "select bname, bauther from books"
+            cur.execute(query)
+            books = cur.fetchall()
+            cur.close()
+        
+        return jsonify({"books": books})
+    
+    return render_template("borrow.html")
+
+@app.route("/profile/add-borrow", methods=("POST",))
+@login_required
+def add_borrow():
+    if request.method == "POST":
+        borrow_info: dict[str, str] = request.json
+        book_name = borrow_info.get("bookName")
+        book_author = borrow_info.get("bookAuthor")
+        borrow_date = datetime.date.today()
+        exp_date = borrow_date + datetime.timedelta(7)
+        # print(book_name)
+        # print(book_author)
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            query = "insert into orders (uid, bid, brw_date, exp_date) values ((select uid from users where username=?), (select bid from books where bname=? and bauther=?), ?, ?)"
+            cur.execute(query, (current_user.username, book_name, book_author, borrow_date, exp_date))
+            conn.commit()
+            cur.close()
+        
+        return jsonify({"success": True})
+
+@app.route("/profile/check-order/")
+@login_required
+def check_borrow():
+    return "check order"
+
+@app.route("/logout/")
+@login_required
+def logout():
+    logout_user()
+    flash("Successfully logged out.")
+    return redirect('/')
 
 if __name__ == "__main__":
-    app.run("localhost", 80, True)
+    app.run("0.0.0.0", 80, True)

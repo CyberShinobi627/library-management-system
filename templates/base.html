@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    {% block style %}{% endblock %}
+    <style>
+        a{
+            text-decoration: none;
+        }
+
+        /* .nav-left{
+            float: left;
+        } */
+        
+        .orders{
+            margin: 200px;
+        }
+
+        #nav-right{
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-left">
+        <a href="/profile">Dashboard</a>
+        <a class="orders" href="/profile/borrow-book">Borrow a Book</a>
+        <a class="orders" href="/profile/check-order">Check my Borrowings</a>
+        <div id="nav-right">
+            <a href="/logout">logout</a>
+        </div>
+    </div>
+    <br><br>
+    <!-- <a href="/profile/hello"></a>
+    <a href="/profile/"></a> -->
+    
+    {% block content %}
+    {% endblock %}
+</body>
+
+</html>
