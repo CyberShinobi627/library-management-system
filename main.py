@@ -128,7 +128,7 @@ def borrow_book():
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            query = "select bname, bauther from books"
+            query = "select bname, bauthor, qty from books"
             cur.execute(query)
             books = cur.fetchall()
             cur.close()
@@ -151,12 +151,31 @@ def add_borrow():
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            query = "insert into orders (uid, bid, brw_date, exp_date) values ((select uid from users where username=?), (select bid from books where bname=? and bauther=?), ?, ?)"
-            cur.execute(query, (current_user.username, book_name, book_author, borrow_date, exp_date))
+            bid_query = "select bid from books where bname=? and bauthor=?"
+            cur.execute(bid_query, (book_name, book_author))
+            bid = cur.fetchone()[0]
+            # print(bid)
+
+            insert_query = "insert into orders (uid, bid, brw_date, exp_date) values ((select uid from users where username=?), ?, ?, ?)"
+            cur.execute(insert_query, (current_user.username, bid, borrow_date, exp_date))
+
+            update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
+            cur.execute(update_query, (bid,))
+
+            qty_query = "select qty from books where bid = ?"
+            cur.execute(qty_query, (bid,))
+            qty = cur.fetchone()[0]
+            print(qty)
+
             conn.commit()
             cur.close()
         
-        return jsonify({"success": True})
+        return jsonify({"qty": qty})
+
+@app.route("/remove-borrow")
+@login_required
+def remove_borrow():
+    return
 
 @app.route("/profile/check-order/")
 @login_required
