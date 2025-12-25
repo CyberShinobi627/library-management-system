@@ -63,15 +63,12 @@ def register():
         user_data = request.form.values()
         user_data = list(user_data)
         user_data[4] = generate_password_hash(user_data[4])
-        # for val in user_data:
-        #     print(val)
         
         try:
             with sqlite3.connect("library.db") as conn:
                 cur = conn.cursor()
 
                 query = "insert into users (firstname, lastname, email, username, password) values (?, ?, ?, ?, ?)"
-                # user_data = [val for val in user_data]
                 cur.execute(query, user_data)
                 conn.commit()
                 cur.close()
@@ -82,7 +79,6 @@ def register():
         except sqlite3.IntegrityError:
             flash(user_data)
             flash("User already exist.")
-            # print(user_data)
             return redirect("/register")
     
     return render_template("register.html")
@@ -99,7 +95,6 @@ def login():
             query = "select * from users where username = ?"
             cur.execute(query, (username,))
             row = cur.fetchone()
-            # print(row)
 
             if row and check_password_hash(row[5], password):
                 new_user = User(*row)
@@ -123,17 +118,23 @@ def profile():
 @app.route("/profile/borrow-book/", methods=("GET", "POST"))
 @login_required
 def borrow_book():
-    # print(request.content_type)
     if request.method == "POST":
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            query = "select bname, bauthor, qty from books"
+            query = "select bid, bname, bauthor, qty from books"
             cur.execute(query)
             books = cur.fetchall()
+
+            bid_query = "select bid from orders where uid = (select uid from users where username = ?)"
+            cur.execute(bid_query, (current_user.username,))
+            bid_tup = cur.fetchall()
+
             cur.close()
         
-        return jsonify({"books": books})
+        bids = [bid[0] for bid in bid_tup]
+
+        return jsonify({"books": books, "borrow_bids": bids})
     
     return render_template("borrow.html")
 
@@ -146,15 +147,12 @@ def add_borrow():
         book_author = borrow_info.get("bookAuthor")
         borrow_date = datetime.date.today()
         exp_date = borrow_date + datetime.timedelta(7)
-        # print(book_name)
-        # print(book_author)
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
             bid_query = "select bid from books where bname=? and bauthor=?"
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
-            # print(bid)
 
             insert_query = "insert into orders (uid, bid, brw_date, exp_date) values ((select uid from users where username=?), ?, ?, ?)"
             cur.execute(insert_query, (current_user.username, bid, borrow_date, exp_date))
@@ -162,25 +160,49 @@ def add_borrow():
             update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
             cur.execute(update_query, (bid,))
 
-            qty_query = "select qty from books where bid = ?"
-            cur.execute(qty_query, (bid,))
-            qty = cur.fetchone()[0]
-            print(qty)
-
             conn.commit()
             cur.close()
         
-        return jsonify({"qty": qty})
+        return jsonify({"success": True})
 
-@app.route("/remove-borrow")
+@app.route("/profile/remove-borrow", methods=("POST",))
 @login_required
 def remove_borrow():
-    return
+    if request.method == "POST":
+        remove_data: dict[str, str] = request.json
+        book_name = remove_data.get("bookName")
+        book_author = remove_data.get("bookAuthor")
 
-@app.route("/profile/check-order/")
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            bid_query = "select bid from books where bname=? and bauthor=?"
+            cur.execute(bid_query, (book_name, book_author))
+            bid = cur.fetchone()[0]
+
+            insert_query = "delete from orders where uid = (select uid from users where username = ?) and bid = ?"
+            cur.execute(insert_query, (current_user.username, bid))
+
+            update_query = "update books set qty = qty+1 where bid = ?"
+            cur.execute(update_query, (bid,))
+
+            conn.commit()
+            cur.close()
+
+    return jsonify({"success": True})
+
+@app.route("/profile/check-borrow/")
 @login_required
 def check_borrow():
-    return "check order"
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select * from orders where uid = (select uid from users where username = ?)"
+        cur.execute(query, (current_user.username,))
+        borrows = cur.fetchall()
+        cur.close()
+    
+    return render_template("check.html", borrows=borrows)
 
 @app.route("/logout/")
 @login_required

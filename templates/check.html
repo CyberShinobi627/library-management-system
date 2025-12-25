@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} Check Borrow {% endblock %}</title>
+    {% block style %}<link rel="stylesheet" href="/css/check.css">{% endblock %}
+</head>
+<body>
+    {% block content %}
+        <h2>My Borrowings</h2>
+        <div class="all-borrows">
+            {% for borrow in borrows %}
+                <p>{{ borrow }}</p>
+                <button type="button">Remove</button>
+            {% endfor %}
+        </div>
+    {% endblock %}
+</body>
+</html>
