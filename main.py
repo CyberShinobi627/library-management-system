@@ -55,6 +55,7 @@ def load_user(uid):
 
 @app.route('/', methods=("GET", "POST"))
 def index():
+    # print(request.headers)
     return render_template("index.html", valid_user=current_user.is_authenticated)
 
 @app.route("/register/", methods=("GET", "POST"))
@@ -165,32 +166,6 @@ def add_borrow():
         
         return jsonify({"success": True})
 
-@app.route("/profile/remove-borrow", methods=("POST",))
-@login_required
-def remove_borrow():
-    if request.method == "POST":
-        remove_data: dict[str, str] = request.json
-        book_name = remove_data.get("bookName")
-        book_author = remove_data.get("bookAuthor")
-
-        with sqlite3.connect("library.db") as conn:
-            cur = conn.cursor()
-
-            bid_query = "select bid from books where bname=? and bauthor=?"
-            cur.execute(bid_query, (book_name, book_author))
-            bid = cur.fetchone()[0]
-
-            insert_query = "delete from orders where uid = (select uid from users where username = ?) and bid = ?"
-            cur.execute(insert_query, (current_user.username, bid))
-
-            update_query = "update books set qty = qty+1 where bid = ?"
-            cur.execute(update_query, (bid,))
-
-            conn.commit()
-            cur.close()
-
-    return jsonify({"success": True})
-
 @app.route("/profile/check-borrow/")
 @login_required
 def check_borrow():
@@ -203,6 +178,28 @@ def check_borrow():
         cur.close()
     
     return render_template("check.html", borrows=borrows)
+
+@app.route("/profile/remove-borrow", methods=("POST",))
+@login_required
+def remove_borrow():
+    if request.method == "POST":
+        remove_data: dict[str, str] = request.json
+        oid = remove_data.get("oid")
+        # print(oid)
+
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+            cur.execute(update_query, (oid,))
+
+            insert_query = "delete from orders where oid = ?"
+            cur.execute(insert_query, (oid,))
+
+            conn.commit()
+            cur.close()
+
+    return jsonify({"success": True})
 
 @app.route("/logout/")
 @login_required

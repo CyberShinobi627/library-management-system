@@ -9,12 +9,41 @@
 </head>
 <body>
     {% block content %}
-        <h2>My Borrowings</h2>
-        <div class="all-borrows">
-            {% for borrow in borrows %}
-                <p>{{ borrow }}</p>
-                <button type="button">Remove</button>
-            {% endfor %}
+        <div class="container">
+            <h2>My Borrowings</h2>
+            <div class="all-borrows">
+                {% if not borrows %}
+                    <p>No borrowed book</p>
+                {% else %}
+                    <p id="empty-msg"></p>
+                    <table id="book-table">
+                        <thead id="head-col">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Book Name</th>
+                                <th>Book Author</th>
+                                <th>Borrow Date</th>
+                                <th>Expire Date</th>
+                                <th>Fine</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-col">
+                            {% for borrow in borrows %}
+                                <tr>
+                                    <td>{{ borrow[0] }}</td>
+                                    <td>{{ borrow[1] }}</td>
+                                    <td>{{ borrow[2] }}</td>
+                                    <td>{{ borrow[3] }}</td>
+                                    <td>{{ borrow[4] }}</td>
+                                    <td>{{ borrow[5] }}</td>
+                                    <td><button type="button">Remove</button></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <script src="/js/check.js" defer></script>
+                {% endif %}
+            </div>
         </div>
     {% endblock %}
 </body>

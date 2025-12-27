@@ -3,10 +3,10 @@ const bookList = document.querySelector("#book-list");
 
 let bookInfo = [];
 const searchInput = document.querySelector("#search-input");
-searchInput.addEventListener("input", (kw) => {
-    const kwVal = kw.target.value.toLowerCase();
+searchInput.addEventListener("input", (searchKey) => {
+    const searchValue = searchKey.target.value.toLowerCase();
     bookInfo.forEach((book) => {
-        const isVisible = book["bname"].toLowerCase().includes(kwVal) || book["bauthor"].toLowerCase().includes(kwVal);
+        const isVisible = book["bname"].toLowerCase().includes(searchValue) || book["bauthor"].toLowerCase().includes(searchValue);
         book["element"].classList.toggle("hide", !isVisible);
     });
 });
@@ -32,8 +32,10 @@ searchInput.addEventListener("input", (kw) => {
         bookAuthor.textContent = book[2];
 
         if(borrowBids.includes(book[0])){
-            button.style.backgroundColor = "red";
-            button.innerText = "Remove";
+            button.disabled = true;
+            button.style.opacity = 0.6;
+            button.style.cursor = "not-allowed";
+            button.innerText = "Borrowed";
         }
         else if(!book[3]){
             button.remove();
@@ -41,46 +43,27 @@ searchInput.addEventListener("input", (kw) => {
         }
 
         button.addEventListener("click", () => {
-            if(button.innerText == "Add"){
-                button.style.backgroundColor = "red";
-                button.innerText = "Remove";
-                (async () => {
-                    const borrowUrl = "/profile/add-borrow";
-                    const borrowParams = {
-                        "method": "POST",
-                        "headers": {"Content-Type": "application/json"},
-                        "body": JSON.stringify({
-                            "bookName": book[1],
-                            "bookAuthor": book[2]
-                        })
-                    };
+            // button.style.backgroundColor = "red";
+            button.disabled = true;
+            button.style.opacity = 0.6;
+            button.style.cursor = "not-allowed";
+            button.innerText = "Borrowed";
+            (async () => {
+                const borrowUrl = "/profile/add-borrow";
+                const borrowParams = {
+                    "method": "POST",
+                    "headers": {"Content-Type": "application/json"},
+                    "body": JSON.stringify({
+                        "bookName": book[1],
+                        "bookAuthor": book[2]
+                    })
+                };
 
-                    const borrowRes = await fetch(borrowUrl, borrowParams);
-                    const borrowData = await borrowRes.json();
-                    const isAdded = borrowData["success"];
-                    // console.log(isAdded);
-                })();
-            }
-            else{
-                button.style.backgroundColor = "#04c07b";
-                button.innerText = "Add";
-                (async () => {
-                    const removeUrl = "/profile/remove-borrow";
-                    const removeParams = {
-                        "method": "POST",
-                        "headers": {"Content-Type": "application/json"},
-                        "body": JSON.stringify({
-                            "bookName": book[1],
-                            "bookAuthor": book[2]
-                        })
-                    };
-
-                    const removeRes = await fetch(removeUrl, removeParams);
-                    const removeData = await removeRes.json();
-                    const isRemoved = removeData["success"];
-                    // console.log(isRemoved);
-                })();
-            }
+                const borrowRes = await fetch(borrowUrl, borrowParams);
+                const borrowData = await borrowRes.json();
+                const isAdded = borrowData["success"];
+                // console.log(isAdded);
+            })();
         });
         
         allBooks.append(bookContent);
