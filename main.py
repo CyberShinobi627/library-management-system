@@ -127,8 +127,8 @@ def borrow_book():
             cur.execute(query)
             books = cur.fetchall()
 
-            bid_query = "select bid from orders where uid = (select uid from users where username = ?)"
-            cur.execute(bid_query, (current_user.username,))
+            bid_query = "select bid from orders where uid = ?"
+            cur.execute(bid_query, (current_user.uid,))
             bid_tup = cur.fetchall()
 
             cur.close()
@@ -155,8 +155,8 @@ def add_borrow():
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
 
-            insert_query = "insert into orders (uid, bid, brw_date, exp_date) values ((select uid from users where username=?), ?, ?, ?)"
-            cur.execute(insert_query, (current_user.username, bid, borrow_date, exp_date))
+            insert_query = "insert into orders (uid, bid, brw_date, exp_date) values (?, ?, ?, ?)"
+            cur.execute(insert_query, (current_user.uid, bid, borrow_date, exp_date))
 
             update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
             cur.execute(update_query, (bid,))
@@ -172,8 +172,8 @@ def check_borrow():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "select * from orders where uid = (select uid from users where username = ?)"
-        cur.execute(query, (current_user.username,))
+        query = "select oid, bname, bauthor, brw_date, exp_date, fine from orders o, books b where o.bid = b.bid and uid = ?"
+        cur.execute(query, (current_user.uid,))
         borrows = cur.fetchall()
         cur.close()
     
@@ -185,7 +185,6 @@ def remove_borrow():
     if request.method == "POST":
         remove_data: dict[str, str] = request.json
         oid = remove_data.get("oid")
-        # print(oid)
 
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
