@@ -6,7 +6,7 @@ for(let row of tableRows){
     const removeBorrow = row.children[6].children[0];
     removeBorrow.addEventListener("click", () => {
         (async () => {
-            const removeUrl = "/profile/remove-borrow";
+            const removeUrl = "/user/remove-borrow";
             const removeParams = {
                 "method": "POST",
                 "headers": {"Content-Type": "application/json"},

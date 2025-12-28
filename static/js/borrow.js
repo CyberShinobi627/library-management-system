@@ -12,7 +12,7 @@ searchInput.addEventListener("input", (searchKey) => {
 });
 
 (async () => {
-    const url = "/profile/borrow-book";
+    const url = "/user/borrow-book";
     const params = {
         "method": "POST",
         "headers": {"Content-Type": "application/json"}
@@ -49,7 +49,7 @@ searchInput.addEventListener("input", (searchKey) => {
             button.style.cursor = "not-allowed";
             button.innerText = "Borrowed";
             (async () => {
-                const borrowUrl = "/profile/add-borrow";
+                const borrowUrl = "/user/add-borrow";
                 const borrowParams = {
                     "method": "POST",
                     "headers": {"Content-Type": "application/json"},

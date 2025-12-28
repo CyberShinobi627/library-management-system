@@ -100,23 +100,24 @@ def login():
             if row and check_password_hash(row[5], password):
                 new_user = User(*row)
                 login_user(new_user)
-                return redirect("/profile")
+                return redirect("/user/profile")
             
             else:
                 flash("Invalid credentials !!!")
                 return redirect("/login")
     
     elif current_user.is_authenticated:
-        return redirect("/profile")
+        return redirect("/user/profile")
     
     return render_template("login.html")
 
-@app.route("/profile/", methods=("GET", "POST"))
+@app.route("/user/", methods=("GET", "POST"))
+@app.route("/user/profile/", methods=("GET", "POST"))
 @login_required
 def profile():
-    return render_template("profile.html", username=current_user.username)
+    return render_template("user-profile.html", username=current_user.username)
 
-@app.route("/profile/borrow-book/", methods=("GET", "POST"))
+@app.route("/user/borrow-book/", methods=("GET", "POST"))
 @login_required
 def borrow_book():
     if request.method == "POST":
@@ -133,13 +134,12 @@ def borrow_book():
 
             cur.close()
         
-        bids = [bid[0] for bid in bid_tup]
-
+        bids = list(map(lambda bid: bid[0], bid_tup))
         return jsonify({"books": books, "borrow_bids": bids})
     
     return render_template("borrow.html")
 
-@app.route("/profile/add-borrow", methods=("POST",))
+@app.route("/user/add-borrow/", methods=("POST",))
 @login_required
 def add_borrow():
     if request.method == "POST":
@@ -166,7 +166,7 @@ def add_borrow():
         
         return jsonify({"success": True})
 
-@app.route("/profile/check-borrow/")
+@app.route("/user/check-borrow/")
 @login_required
 def check_borrow():
     with sqlite3.connect("library.db") as conn:
@@ -179,7 +179,7 @@ def check_borrow():
     
     return render_template("check.html", borrows=borrows)
 
-@app.route("/profile/remove-borrow", methods=("POST",))
+@app.route("/user/remove-borrow/", methods=("POST",))
 @login_required
 def remove_borrow():
     if request.method == "POST":
@@ -200,7 +200,7 @@ def remove_borrow():
 
     return jsonify({"success": True})
 
-@app.route("/logout/")
+@app.route("/user/logout/")
 @login_required
 def logout():
     logout_user()
