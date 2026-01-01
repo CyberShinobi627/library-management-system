@@ -1,0 +1,33 @@
+{% extends "keeper-base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}add book{% endblock %}</title>
+</head>
+<body>
+    {% block content %}
+        {% with message = get_flashed_messages()[0] %}
+            <p style="color: green;">{{ message }}</p>
+        {% endwith %}
+        <form action="#" method="post">
+            <h2>Add new Book</h2>
+            <label>Name of the Book:</label>
+            <input type="text" name="bname" required><br><br>
+            <label>Name of the Author:</label>
+            <input type="text" name="bauthor" id="bauthor" list="authors" required><br><br>
+            <datalist id="authors">
+                {% for author in authors %}
+                    <option>{{ author }}</option>
+                {% endfor %}
+            </datalist>
+            <label>Quantity:</label>
+            <input type="number" name="qty" required><br><br>
+            <label>Price:</label>
+            <input type="number" name="price" required><br><br>
+            <button type="submit">Add book</button>
+        </form>
+    {% endblock %}
+</body>
+</html>

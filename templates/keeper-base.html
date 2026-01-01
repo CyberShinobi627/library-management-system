@@ -3,9 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>{% block title %}{% endblock %}</title>
+    {% block style %}{% endblock %}
+    <style>
+        a{
+            text-decoration: none;
+        }
+
+        /* .nav-left{
+            float: left;
+        } */
+        
+        .keeper-nav{
+            margin: 200px;
+        }
+
+        #nav-right{
+            float: right;
+        }
+    </style>
 </head>
 <body>
-    
+    <div class="nav-left">
+        <a href="/keeper/profile">Dashboard</a>
+        <a class="keeper-nav" href="/keeper/add-book">Add Book</a>
+        <a class="keeper-nav" href="{{ url_for('update_qty') }}">Update Quantity</a>
+        
+        <div id="nav-right">
+            <a href="/logout">logout</a>
+        </div>
+    </div>
+    <br><br>
+    {% block content %}
+    {% endblock %}
 </body>
 </html>

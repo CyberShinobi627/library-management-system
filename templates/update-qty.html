@@ -1,0 +1,45 @@
+{% extends "keeper-base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}modify book{% endblock %}</title>
+    {% block style %}<link rel="stylesheet" href="/css/update-qty.css">{% endblock %}
+</head>
+<body>
+    {% block content %}
+        <h3>Add quantity</h3>
+        {% with message = get_flashed_messages()[0] %}
+            <p style="color: green;" id="show-msg">{{ message }}</p>
+        {% endwith %}
+        <form action="#" method="post">
+            <label>Book ID:</label>
+            <input type="text" id="bid-input" name="bid" required>
+            <button type="button" id="forgot-id">Forgot Book ID?</button><br><br>
+            <div class="book-info hide">
+                <label>Book Name:</label>
+                <input type="text" id="bname" list="bnames"><br><br>
+                <datalist id="bnames">
+                    {% for bname in bnames %}
+                        <option>{{ bname }}</option>
+                    {% endfor %}
+                </datalist>
+                <label>Author Name:</label>
+                <input type="text" id="bauthor" list="bauthors"><br><br>
+                <datalist id="bauthors">
+                    {% for bauthor in bauthors %}
+                        <option>{{ bauthor }}</option>
+                    {% endfor %}
+                </datalist>
+                <button type="button" id="fetch-id">Fetch Book ID</button><br><br>
+            </div>
+            <label>Quantity:</label>
+            <input type="number" name="qty" required><br><br>
+            <button type="submit" name="operation" value="add">Add</button>
+            <button type="submit" name="operation" value="remove">Remove</button>
+        </form>
+        <script src="/js/update-qty.js"></script>
+    {% endblock %}
+</body>
+</html>
