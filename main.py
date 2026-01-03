@@ -157,7 +157,22 @@ def admin():
 def keeper_profile():
     return render_template("keeper-profile.html")
 
-@app.route("/keeper/add-book", methods=("GET", "POST"))
+@app.route("/keeper/show-books/")
+@login_required
+def show_books():
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select * from books"
+        cur.execute(query)
+        books = cur.fetchall()
+
+        cur.close()
+    
+    return render_template("show-books.html", books=books)
+
+@app.route("/keeper/add-book/", methods=("GET", "POST"))
+@login_required
 def add_book():
     if request.method == "POST":
         # print(request.form.values())
@@ -188,7 +203,8 @@ def add_book():
 
     return render_template("add-book.html", authors=authors)
 
-@app.route("/keeper/update-qty", methods=("GET", "POST"))
+@app.route("/keeper/update-qty/", methods=("GET", "POST"))
+@login_required
 def update_qty():
     if request.method == "POST":
         print(request.form)
@@ -231,7 +247,8 @@ def update_qty():
 
     return render_template("update-qty.html", bnames=bnames, bauthors=bauthors)
 
-@app.route("/keeper/fetch-id", methods=("POST",))
+@app.route("/keeper/fetch-id/", methods=("POST",))
+@login_required
 def fetch_id():
     json_data: dict[str, str] = request.json
     bname = json_data.get("bname")
@@ -246,6 +263,58 @@ def fetch_id():
         cur.close()
     
     return jsonify({"bid": bid[0] if bid is not None else 0})
+
+@app.route("/keeper/pending-orders/")
+@login_required
+def pending_orders():
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select oid, username, bname, bauthor from orders o, users u, books b where o.uid = u.uid and o.bid = b.bid and status = 1"
+        cur.execute(query)
+        pendings = cur.fetchall()
+
+        cur.close()
+    
+    return render_template("pending-orders.html", pendings=pendings)
+
+@app.route("/keeper/accept-order", methods=("POST",))
+@login_required
+def accept_order():
+    json_data: dict[str, str] = request.json
+    oid = json_data.get("oid")
+    brw_date = datetime.date.today()
+    exp_date = brw_date + datetime.timedelta(7)
+    
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "update orders set brw_date = ?, exp_date = ?, fine = 0, returned = 0, status = 2 where oid = ?"
+        cur.execute(query, (brw_date, exp_date, oid))
+
+        conn.commit()
+        cur.close()
+    
+    print("Accepted", oid)
+    return jsonify({"success": True})
+
+@app.route("/keeper/reject-order", methods=("POST",))
+@login_required
+def reject_order():
+    json_data: dict[str, str] = request.json
+    oid = json_data.get("oid")
+
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "update orders set status = 3 where oid = ?"
+        cur.execute(query, (oid,))
+
+        conn.commit()
+        cur.close()
+    
+    print("Rejected", oid)
+    return jsonify({"success": True})
 
 @app.route("/user/", methods=("GET", "POST"))
 @app.route("/user/profile/", methods=("GET", "POST"))
@@ -264,15 +333,20 @@ def borrow_book():
             cur.execute(query)
             books = cur.fetchall()
 
-            bid_query = "select bid from orders where uid = ?"
+            bid_query = "select bid, status from orders where uid = ? and status < 3"
             cur.execute(bid_query, (current_user.uid,))
-            bid_list = cur.fetchall()
+            order_info = cur.fetchall()
 
             cur.close()
         
-        bids = tuple(map(lambda bid: bid[0], bid_list))
+        bids = tuple(map(lambda bid: bid[0], order_info))
+        statuses = tuple(map(lambda status: status[1], order_info))
 
-        return jsonify({"books": books, "borrow_bids": bids})
+        # print(bids)
+        # print(statuses)
+        return jsonify({"books": books,
+                        "bids": bids,
+                        "statuses": statuses})
     
     return render_template("borrow.html")
 
@@ -283,8 +357,6 @@ def add_borrow():
         borrow_info: dict[str, str] = request.json
         book_name = borrow_info.get("bookName")
         book_author = borrow_info.get("bookAuthor")
-        brw_date = datetime.date.today()
-        exp_date = brw_date + datetime.timedelta(7)
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
@@ -292,11 +364,11 @@ def add_borrow():
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
 
-            insert_query = "insert into orders (uid, bid, brw_date, exp_date) values (?, ?, ?, ?)"
-            cur.execute(insert_query, (current_user.uid, bid, brw_date, exp_date))
+            insert_query = "insert into orders (uid, bid, status) values (?, ?, ?)"
+            cur.execute(insert_query, (current_user.uid, bid, 1))
 
-            update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
-            cur.execute(update_query, (bid,))
+            # update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
+            # cur.execute(update_query, (bid,))
 
             conn.commit()
             cur.close()
@@ -309,7 +381,7 @@ def check_borrow():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "select oid, bname, bauthor, brw_date, exp_date, fine from orders o, books b where o.bid = b.bid and uid = ?"
+        query = "select oid, bname, bauthor, brw_date, exp_date, fine, returned, status from orders o, books b where uid = ? and status < 3 and o.bid = b.bid"
         cur.execute(query, (current_user.uid,))
         borrows = cur.fetchall()
         cur.close()
@@ -319,18 +391,39 @@ def check_borrow():
 @app.route("/user/remove-borrow/", methods=("POST",))
 @login_required
 def remove_borrow():
-    if request.method == "POST":
-        remove_data: dict[str, str] = request.json
+    remove_data: dict[str, str] = request.json
+    print(remove_data)
+    if "oid" in remove_data.keys():
         oid = remove_data.get("oid")
 
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
-            cur.execute(update_query, (oid,))
+            # update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+            # cur.execute(update_query, (oid,))
 
-            insert_query = "delete from orders where oid = ?"
-            cur.execute(insert_query, (oid,))
+            delete_query = "delete from orders where oid = ?"
+            cur.execute(delete_query, (oid,))
+
+            conn.commit()
+            cur.close()
+    
+    else:
+        book_name = remove_data.get("bookName")
+        book_author = remove_data.get("bookAuthor")
+
+        with sqlite3.connect("library.db") as conn:
+            cur = conn.cursor()
+
+            bid_query = "select bid from books where bname = ? and bauthor = ?"
+            cur.execute(bid_query, (book_name, book_author))
+            bid = cur.fetchone()[0]
+
+            delete_query = "delete from orders where uid = ? and bid = ? and status = 1"
+            cur.execute(delete_query, (current_user.uid, bid))
+
+            # update_query = "update books set qty = qty+1 where bid = ?"
+            # cur.execute(update_query, (bid,))
 
             conn.commit()
             cur.close()

@@ -15,7 +15,7 @@
         } */
         
         .keeper-nav{
-            margin: 200px;
+            margin: 100px;
         }
 
         #nav-right{
@@ -26,8 +26,10 @@
 <body>
     <div class="nav-left">
         <a href="/keeper/profile">Dashboard</a>
+        <a class="keeper-nav" href="{{ url_for('show_books') }}">Show all Books</a>
         <a class="keeper-nav" href="/keeper/add-book">Add Book</a>
         <a class="keeper-nav" href="{{ url_for('update_qty') }}">Update Quantity</a>
+        <a class="keeper-nav" href="{{ url_for('pending_orders') }}">Pending Orders</a>
         
         <div id="nav-right">
             <a href="/logout">logout</a>
