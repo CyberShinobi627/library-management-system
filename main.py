@@ -207,7 +207,7 @@ def add_book():
 @login_required
 def update_qty():
     if request.method == "POST":
-        print(request.form)
+        # print(request.form)
         bid = request.form.get("bid")
         qty = request.form.get("qty")
         operation = request.form.get("operation")
@@ -270,7 +270,7 @@ def pending_orders():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "select oid, username, bname, bauthor from orders o, users u, books b where o.uid = u.uid and o.bid = b.bid and status = 1"
+        query = "select oid, username, bname, bauthor from orders o, users u, books b where status = 1 and o.uid = u.uid and o.bid = b.bid"
         cur.execute(query)
         pendings = cur.fetchall()
 
@@ -289,13 +289,15 @@ def accept_order():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "update orders set brw_date = ?, exp_date = ?, fine = 0, returned = 0, status = 2 where oid = ?"
-        cur.execute(query, (brw_date, exp_date, oid))
+        update_orders = "update orders set brw_date = ?, exp_date = ?, fine = 0, returned = 0, status = 2 where oid = ?"
+        cur.execute(update_orders, (brw_date, exp_date, oid))
+
+        # update_book = "update books set qty = qty-1 where bid = (select bid from orders where oid = ?) and qty != 0"
+        # cur.execute(update_book, (oid,))
 
         conn.commit()
         cur.close()
     
-    print("Accepted", oid)
     return jsonify({"success": True})
 
 @app.route("/keeper/reject-order", methods=("POST",))
@@ -307,13 +309,50 @@ def reject_order():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "update orders set status = 3 where oid = ?"
-        cur.execute(query, (oid,))
+        update_orders = "update orders set status = 3 where oid = ?"
+        cur.execute(update_orders, (oid,))
+
+        update_books = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+        cur.execute(update_books, (oid,))
 
         conn.commit()
         cur.close()
     
-    print("Rejected", oid)
+    return jsonify({"success": True})
+
+@app.route("/keeper/borrowed-books/")
+@login_required
+def borrowed_books():
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select oid, username, bname, bauthor, brw_date, exp_date, fine from orders o, users u, books b where status = 2 and o.uid = u.uid and o.bid = b.bid"
+        cur.execute(query)
+        borrows = cur.fetchall()
+
+        cur.close()
+    
+    # print(borrows)
+    return render_template("borrowed-books.html", borrows=borrows)
+
+@app.route("/keeper/return-book/", methods=("POST",))
+@login_required
+def return_book():
+    json_data: dict[str, str] = request.json
+    oid = json_data.get("oid")
+
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        update_orders = "update orders set status = 4 where oid = ?"
+        cur.execute(update_orders, (oid,))
+
+        update_books = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+        cur.execute(update_books, (oid,))
+
+        conn.commit()
+        cur.close()
+    
     return jsonify({"success": True})
 
 @app.route("/user/", methods=("GET", "POST"))
@@ -335,18 +374,13 @@ def borrow_book():
 
             bid_query = "select bid, status from orders where uid = ? and status < 3"
             cur.execute(bid_query, (current_user.uid,))
-            order_info = cur.fetchall()
+            order_info_list = cur.fetchall()
 
             cur.close()
         
-        bids = tuple(map(lambda bid: bid[0], order_info))
-        statuses = tuple(map(lambda status: status[1], order_info))
-
-        # print(bids)
-        # print(statuses)
-        return jsonify({"books": books,
-                        "bids": bids,
-                        "statuses": statuses})
+        order_info_json = {bid: status for bid, status in order_info_list}
+        
+        return jsonify({"books": books, "order_info_json": order_info_json})
     
     return render_template("borrow.html")
 
@@ -364,11 +398,11 @@ def add_borrow():
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
 
-            insert_query = "insert into orders (uid, bid, status) values (?, ?, ?)"
-            cur.execute(insert_query, (current_user.uid, bid, 1))
+            insert_query = "insert into orders (uid, bid, status) values (?, ?, 1)"
+            cur.execute(insert_query, (current_user.uid, bid))
 
-            # update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
-            # cur.execute(update_query, (bid,))
+            update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
+            cur.execute(update_query, (bid,))
 
             conn.commit()
             cur.close()
@@ -392,15 +426,15 @@ def check_borrow():
 @login_required
 def remove_borrow():
     remove_data: dict[str, str] = request.json
-    print(remove_data)
+    # print(remove_data)
     if "oid" in remove_data.keys():
         oid = remove_data.get("oid")
 
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            # update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
-            # cur.execute(update_query, (oid,))
+            update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+            cur.execute(update_query, (oid,))
 
             delete_query = "delete from orders where oid = ?"
             cur.execute(delete_query, (oid,))
@@ -419,11 +453,11 @@ def remove_borrow():
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
 
+            update_query = "update books set qty = qty+1 where bid = ?"
+            cur.execute(update_query, (bid,))
+
             delete_query = "delete from orders where uid = ? and bid = ? and status = 1"
             cur.execute(delete_query, (current_user.uid, bid))
-
-            # update_query = "update books set qty = qty+1 where bid = ?"
-            # cur.execute(update_query, (bid,))
 
             conn.commit()
             cur.close()

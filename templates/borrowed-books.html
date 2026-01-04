@@ -1,52 +1,48 @@
-{% extends "user-base.html" %}
+{% extends "keeper-base.html" %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %} Check Borrow {% endblock %}</title>
-    {% block style %}<link rel="stylesheet" href="/css/check.css">{% endblock %}
+    <title>{% block title %}borrowed books{% endblock %}</title>
 </head>
 <body>
     {% block content %}
-        <div class="container">
-            <h2>My Borrowings</h2>
+    <div class="container">
+            <h3>All borrowed books</h3>
             <div class="all-borrows">
                 {% if not borrows %}
-                    <p>No borrowed book</p>
+                    <p>No borrowed books.</p>
                 {% else %}
                     <p id="empty-msg"></p>
-                    <table id="book-table">
-                        <thead id="head-col">
+                    <table id="borrow-table">
+                        <thead id="borrow-head">
                             <tr>
                                 <th>Order ID</th>
+                                <th>Username</th>
                                 <th>Book Name</th>
                                 <th>Author Name</th>
                                 <th>Borrow Date</th>
                                 <th>Expiry Date</th>
                                 <th>Fine</th>
-                                <th>Returned</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="body-col">
+                        <tbody id="borrow-body">
                             {% for borrow in borrows %}
-                                {% set status = borrow[7] %}
                                 <tr>
                                     <td>{{ borrow[0] }}</td>
                                     <td>{{ borrow[1] }}</td>
                                     <td>{{ borrow[2] }}</td>
-                                    <td>{{ "N/A" if status == 1 else borrow[3] }}</td>
-                                    <td>{{ "N/A" if status == 1 else borrow[4] }}</td>
-                                    <td>{{ "N/A" if status == 1 else borrow[5] }}</td>
-                                    <td>{{ "N/A" if status == 1 else borrow[6] }}</td>
-                                    <td>{{ "Pending" if status == 1 else "Borrowed" }}</td>
-                                    <td>{% if status == 1 %}<button type="button">Remove</button>{% endif %}</td>
+                                    <td>{{ borrow[3] }}</td>
+                                    <td>{{ borrow[4] }}</td>
+                                    <td>{{ borrow[5] }}</td>
+                                    <td>{{ borrow[6] }}</td>
+                                    <td><button type="button">Return</button></td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                    <script src="/js/check.js" defer></script>
+                    <script src="/js/borrowed-books.js"></script>
                 {% endif %}
             </div>
         </div>

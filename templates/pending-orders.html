@@ -8,39 +8,39 @@
 </head>
 <body>
     {% block content %}
-    <div class="container">
-        <h3>Pending Orders</h3>
-        <div class="all-pendings">
-            {% if not pendings %}
-                <p>There are no pendings.</p>
-            {% else %}
-                <p id="empty-msg"></p>
-                <table id="pending-table">
-                    <thead id="head-col">
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Username</th>
-                            <th>Book Name</th>
-                            <th>Author Name</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-col">
-                        {% for pending in pendings %}
+        <div class="container">
+            <h3>Pending Orders</h3>
+            <div class="all-pendings">
+                {% if not pendings %}
+                    <p>There are no pendings.</p>
+                {% else %}
+                    <p id="empty-msg"></p>
+                    <table id="pending-table">
+                        <thead id="head-col">
                             <tr>
-                                <td>{{ pending[0] }}</td>
-                                <td>{{ pending[1] }}</td>
-                                <td>{{ pending[2] }}</td>
-                                <td>{{ pending[3] }}</td>
-                                <td><button type="button">Accept</button></td>
-                                <td><button type="button">Reject</button></td>
+                                <th>Order ID</th>
+                                <th>Username</th>
+                                <th>Book Name</th>
+                                <th>Author Name</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <script src="/js/pending-orders.js"></script>
-            {% endif %}
+                        </thead>
+                        <tbody id="body-col">
+                            {% for pending in pendings %}
+                                <tr>
+                                    <td>{{ pending[0] }}</td>
+                                    <td>{{ pending[1] }}</td>
+                                    <td>{{ pending[2] }}</td>
+                                    <td>{{ pending[3] }}</td>
+                                    <td><button type="button">Accept</button></td>
+                                    <td><button type="button">Reject</button></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <script src="/js/pending-orders.js"></script>
+                {% endif %}
+            </div>
         </div>
-    </div>
     {% endblock %}
 </body>
 </html>

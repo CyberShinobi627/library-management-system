@@ -3,9 +3,9 @@ const tableRows = bodyColumn.children;
 
 for(let row of tableRows){
     const oidColumn = row.children[0];
-    // console.log(oidColumn);
     const acceptButton = row.children[4].children[0];
-    // console.log(acceptButton);
+    const pendingTable = document.querySelector("#pending-table");
+    let emptyMsg = document.querySelector("#empty-msg");
     acceptButton.addEventListener("click", () => {
         (async () => {
             const acceptUrl = "/keeper/accept-order";
@@ -20,16 +20,18 @@ for(let row of tableRows){
             const acceptResponse = await fetch(acceptUrl, acceptParams);
             const acceptJson = await acceptResponse.json();
             const isAccepted = acceptJson["success"];
-            console.log(isAccepted);
+            // console.log(isAccepted);
             if(isAccepted){
                 row.remove();
             }
+            if(!tableRows.length){
+                pendingTable.remove();
+                emptyMsg.innerText = "There are no pendings.";
+            }
         })();
-        // console.log(row);
     });
 
     const rejectButton = row.children[5].children[0];
-    // console.log(rejectButton);
     rejectButton.addEventListener("click", () => {
         (async () => {
             const rejectUrl = "/keeper/reject-order";
@@ -44,9 +46,13 @@ for(let row of tableRows){
             const rejectResponse = await fetch(rejectUrl, rejectParams);
             const rejectJson = await rejectResponse.json();
             const isRejected = rejectJson["success"];
-            console.log(isRejected);
+            // console.log(isRejected);
             if(isRejected){
                 row.remove();
+            }
+            if(!tableRows.length){
+                pendingTable.remove();
+                emptyMsg.innerText = "There are no pendings.";
             }
         })();
     });
