@@ -57,7 +57,6 @@ def load_user(uid):
 
 @app.before_request
 def admin_access():
-    # print(request.path)
     if request.path.startswith("/admin/"):
         if not (current_user.is_authenticated and current_user.isadmin):
             abort(403)
@@ -72,7 +71,6 @@ def admin_access():
 
 @app.route('/', methods=("GET", "POST"))
 def index():
-    # print(request.headers)
     return render_template("index.html", current_user=current_user)
 
 @app.route("/register/", methods=("GET", "POST"))
@@ -113,7 +111,6 @@ def login():
             query = "select * from users where username = ?"
             cur.execute(query, (username,))
             row = cur.fetchone()
-            # print(row)
 
             if row and check_password_hash(row[5], password):
                 new_user = User(*row)
@@ -121,7 +118,6 @@ def login():
 
                 isadmin = row[6]
                 iskeeper = row[7]
-                # print(isadmin, iskeeper)
                 if isadmin:
                     return redirect(url_for("admin"))
                 
@@ -148,11 +144,10 @@ def login():
 @app.route("/admin/", methods=("GET", "POST"))
 @login_required
 def admin():
-    # print(request.referrer)
     return "admin page"
 
 @app.route("/keeper/", methods=("GET", "POST"))
-@app.route("/keeper/profile", methods=("GET", "POST"))
+@app.route("/keeper/profile/", methods=("GET", "POST"))
 @login_required
 def keeper_profile():
     return render_template("keeper-profile.html")
@@ -175,7 +170,6 @@ def show_books():
 @login_required
 def add_book():
     if request.method == "POST":
-        # print(request.form.values())
         new_book = request.form.values()
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
@@ -199,7 +193,6 @@ def add_book():
         cur.close()
     
     authors = tuple(map(lambda author: author[0], author_list))
-    # print(authors)
 
     return render_template("add-book.html", authors=authors)
 
@@ -207,7 +200,6 @@ def add_book():
 @login_required
 def update_qty():
     if request.method == "POST":
-        # print(request.form)
         bid = request.form.get("bid")
         qty = request.form.get("qty")
         operation = request.form.get("operation")
@@ -278,7 +270,7 @@ def pending_orders():
     
     return render_template("pending-orders.html", pendings=pendings)
 
-@app.route("/keeper/accept-order", methods=("POST",))
+@app.route("/keeper/accept-order/", methods=("POST",))
 @login_required
 def accept_order():
     json_data: dict[str, str] = request.json
@@ -292,15 +284,12 @@ def accept_order():
         update_orders = "update orders set brw_date = ?, exp_date = ?, fine = 0, returned = 0, status = 2 where oid = ?"
         cur.execute(update_orders, (brw_date, exp_date, oid))
 
-        # update_book = "update books set qty = qty-1 where bid = (select bid from orders where oid = ?) and qty != 0"
-        # cur.execute(update_book, (oid,))
-
         conn.commit()
         cur.close()
     
     return jsonify({"success": True})
 
-@app.route("/keeper/reject-order", methods=("POST",))
+@app.route("/keeper/reject-order/", methods=("POST",))
 @login_required
 def reject_order():
     json_data: dict[str, str] = request.json
@@ -332,7 +321,6 @@ def borrowed_books():
 
         cur.close()
     
-    # print(borrows)
     return render_template("borrowed-books.html", borrows=borrows)
 
 @app.route("/keeper/return-book/", methods=("POST",))
@@ -354,6 +342,20 @@ def return_book():
         cur.close()
     
     return jsonify({"success": True})
+
+@app.route("/keeper/history/")
+@login_required
+def keeper_history():
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select oid, username, bname, bauthor, brw_date, exp_date, fine, status from orders o, users u, books b where status >= 3 and o.uid = u.uid and o.bid = b.bid"
+        cur.execute(query)
+        histories = cur.fetchall()
+
+        cur.close()
+    
+    return render_template("keeper-history.html", histories=histories)
 
 @app.route("/user/", methods=("GET", "POST"))
 @app.route("/user/profile/", methods=("GET", "POST"))
@@ -382,7 +384,7 @@ def borrow_book():
         
         return jsonify({"books": books, "order_info_json": order_info_json})
     
-    return render_template("borrow.html")
+    return render_template("borrow-book.html")
 
 @app.route("/user/add-borrow/", methods=("POST",))
 @login_required
@@ -420,13 +422,12 @@ def check_borrow():
         borrows = cur.fetchall()
         cur.close()
     
-    return render_template("check.html", borrows=borrows)
+    return render_template("check-borrow.html", borrows=borrows)
 
 @app.route("/user/remove-borrow/", methods=("POST",))
 @login_required
 def remove_borrow():
     remove_data: dict[str, str] = request.json
-    # print(remove_data)
     if "oid" in remove_data.keys():
         oid = remove_data.get("oid")
 
@@ -463,6 +464,20 @@ def remove_borrow():
             cur.close()
 
     return jsonify({"success": True})
+
+@app.route("/user/history/")
+@login_required
+def user_history():
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select oid, bname, bauthor, brw_date, exp_date, fine, status from orders o, books b where uid = ? and status >= 3 and o.bid = b.bid"
+        cur.execute(query, (current_user.uid,))
+        histories = cur.fetchall()
+
+        cur.close()
+    
+    return render_template("user-history.html", histories=histories)
 
 @app.route("/logout/")
 @login_required

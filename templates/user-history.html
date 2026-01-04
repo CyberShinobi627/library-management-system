@@ -1,0 +1,50 @@
+{% extends "user-base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}history{% endblock %}</title>
+    {% block style %}<link rel="stylesheet" href="/css/history.css">{% endblock %}
+</head>
+<body>
+    {% block content %}
+        <div class="history-container">
+            <h2>History</h2>
+            <div class="histories">
+                {% if not histories %}
+                    <p>No history</p>
+                {% else %}
+                    <table id="history-table">
+                        <thead id="history-head">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Book Name</th>
+                                <th>Author Name</th>
+                                <th>Borrow Date</th>
+                                <th>Expiry date</th>
+                                <th>Fine</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            {% for history in histories %}
+                                {% set status = history[6] %}
+                                <tr>
+                                    <td>{{ history[0] }}</td>
+                                    <td>{{ history[1] }}</td>
+                                    <td>{{ history[2] }}</td>
+                                    <td>{{ "N/A" if status == 3 else history[3] }}</td>
+                                    <td>{{ "N/A" if status == 3 else history[4] }}</td>
+                                    <td>{{ "N/A" if status == 3 else history[5] }}</td>
+                                    <td>{{ "Rejected" if status == 3 else "Returned" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </div>
+    {% endblock %}
+</body>
+</html>

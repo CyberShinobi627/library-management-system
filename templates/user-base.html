@@ -16,7 +16,7 @@
         } */
         
         .orders{
-            margin: 200px;
+            margin: 150px;
         }
 
         #nav-right{
@@ -28,8 +28,9 @@
 <body>
     <div class="nav-left">
         <a href="/user/profile">Dashboard</a>
-        <a class="orders" href="/user/borrow-book">Borrow a Book</a>
-        <a class="orders" href="/user/check-borrow">Check my Borrowings</a>
+        <a class="orders" href="{{ url_for('borrow_book') }}">Borrow a Book</a>
+        <a class="orders" href="{{ url_for('check_borrow') }}">Check my Borrowings</a>
+        <a class="orders" href="{{ url_for('user_history') }}">History</a>
         <div id="nav-right">
             <a href="/logout">logout</a>
         </div>
