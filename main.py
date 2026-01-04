@@ -281,7 +281,7 @@ def accept_order():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        update_orders = "update orders set brw_date = ?, exp_date = ?, fine = 0, returned = 0, status = 2 where oid = ?"
+        update_orders = "update orders set brw_date = ?, exp_date = ?, fine = 0, status = 2 where oid = ?"
         cur.execute(update_orders, (brw_date, exp_date, oid))
 
         conn.commit()
@@ -417,7 +417,7 @@ def check_borrow():
     with sqlite3.connect("library.db") as conn:
         cur = conn.cursor()
 
-        query = "select oid, bname, bauthor, brw_date, exp_date, fine, returned, status from orders o, books b where uid = ? and status < 3 and o.bid = b.bid"
+        query = "select oid, bname, bauthor, brw_date, exp_date, fine, status from orders o, books b where uid = ? and status < 3 and o.bid = b.bid"
         cur.execute(query, (current_user.uid,))
         borrows = cur.fetchall()
         cur.close()

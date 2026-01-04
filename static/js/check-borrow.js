@@ -3,7 +3,7 @@ const tableRows = bodyColumn.children;
 
 for(let row of tableRows){
     const oidColumn = row.children[0];
-    const buttonRow = row.children[8].children;
+    const buttonRow = row.children[7].children;
     if(buttonRow.length){
         buttonRow[0].addEventListener("click", () => {
             (async () => {

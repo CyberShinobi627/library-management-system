@@ -25,13 +25,12 @@
                                 <th>Borrow Date</th>
                                 <th>Expiry Date</th>
                                 <th>Fine</th>
-                                <th>Returned</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="body-col">
                             {% for borrow in borrows %}
-                                {% set status = borrow[7] %}
+                                {% set status = borrow[6] %}
                                 <tr>
                                     <td>{{ borrow[0] }}</td>
                                     <td>{{ borrow[1] }}</td>
@@ -39,7 +38,6 @@
                                     <td>{{ "N/A" if status == 1 else borrow[3] }}</td>
                                     <td>{{ "N/A" if status == 1 else borrow[4] }}</td>
                                     <td>{{ "N/A" if status == 1 else borrow[5] }}</td>
-                                    <td>{{ "N/A" if status == 1 else borrow[6] }}</td>
                                     <td>{{ "Pending" if status == 1 else "Borrowed" }}</td>
                                     <td>{% if status == 1 %}<button type="button">Remove</button>{% endif %}</td>
                                 </tr>
