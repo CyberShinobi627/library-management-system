@@ -7,21 +7,20 @@
 </head>
 <body>
     <h1>Register</h1>
-    {% with messages = get_flashed_messages() %}
-        <p style="color: red;">{{ messages[1] if messages }}</p>
-        <form action="#" method="post">
-            <label>Enter your first name:</label>
-            <input type="text" name="fname" value="{{ messages[0][0] if messages }}" required><br><br>
-            <label>Enter your last name:</label>
-            <input type="text" name="lname" value="{{ messages[0][1] if messages }}" required><br><br>
-            <label>Enter your E-mail:</label>
-            <input type="email" name="email" value="{{ messages[0][2] if messages }}" required><br><br>
-            <label>Create a username:</label>
-            <input type="text" name="username" required><br><br>
-            <label>Create a password:</label>
-            <input type="password" name="password" required><br><br>
-            <button type="submit">Submit</button>
-        </form>
-    {% endwith %}
+    <form id="register-form" action="#" method="post">
+        <label>Enter your first name:</label>
+        <input type="text" name="fname" required><br><br>
+        <label>Enter your last name:</label>
+        <input type="text" name="lname" required><br><br>
+        <label>Enter your E-mail:</label>
+        <input type="email" name="email" required><br>
+        <p id="user-msg"></p>
+        <label>Create a username:</label>
+        <input type="text" id="user-input" name="username" required><br><br>
+        <label>Create a password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <button type="submit" id="submit-btn">Submit</button>
+    </form>
+    <script src="/js/register.js"></script>
 </body>
 </html>

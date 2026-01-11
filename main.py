@@ -79,6 +79,9 @@ def register():
         user_data = request.form.values()
         user_data = list(user_data)
         user_data[4] = generate_password_hash(user_data[4])
+
+        if len(user_data) < 3:
+            return jsonify({"message": "Username must contain atleast 3 characters"})
         
         try:
             with sqlite3.connect("library.db") as conn:
@@ -93,11 +96,25 @@ def register():
             return redirect(url_for("index"))
         
         except sqlite3.IntegrityError:
-            flash(user_data)
-            flash("User already exist.")
-            return redirect(url_for("register"))
+            return jsonify({"message": "Username already exists"})
     
     return render_template("register.html")
+
+@app.route("/check-user/", methods=("POST",))
+def check_user():
+    json_data: dict[str, str] = request.json
+    user_search = json_data.get("userSearch")
+    with sqlite3.connect("library.db") as conn:
+        cur = conn.cursor()
+
+        query = "select * from users where username = ?"
+        cur.execute(query, (user_search,))
+        user_exist = cur.fetchone()
+
+        cur.close()
+    
+    # print(bool(user_exist))
+    return jsonify({"user_exist": bool(user_exist)})
 
 @app.route("/login/", methods=("GET", "POST"))
 def login():
