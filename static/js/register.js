@@ -2,9 +2,8 @@ const userInput = document.querySelector("#user-input");
 const userMsg = document.querySelector("#user-msg");
 userInput.addEventListener("input", (event) => {
     const userSearch = event.target.value;
-    // console.log(userSearch.length);
     if(userSearch.length < 3){
-        userMsg.innerText = "Username must contain minimum 3 characters";
+        userMsg.innerText = "Username must contain atleast 3 characters";
         userMsg.style.color = "red";
     }
     else{
@@ -21,7 +20,6 @@ userInput.addEventListener("input", (event) => {
             const response = await fetch(url, params);
             const jsonData = await response.json();
             const userExist = jsonData["user_exist"];
-            // console.log(userExist);
             if(userExist){
                 userMsg.innerText = "Username already exist";
                 userMsg.style.color = "red";
@@ -35,8 +33,7 @@ userInput.addEventListener("input", (event) => {
 });
 
 const submitBtn = document.querySelector("#submit-btn");
-submitBtn.addEventListener("click", (event) => {
-    // console.log(userInput.value);
+submitBtn.addEventListener("click", () => {
     const userSearch = userInput.value;
     if(userSearch < 3){
         userMsg.innerText = "Username must contain atleast 3 characters";
@@ -56,12 +53,10 @@ submitBtn.addEventListener("click", (event) => {
             const response = await fetch(url, params);
             const jsonData = await response.json();
             const userExist = jsonData["user_exist"];
-            // console.log(userExist);
-    
+
             if(userExist){
                 const password = document.querySelector("#password");
                 password.value = '';
-                // console.log(password.value);
             }
             else{
                 const registerForm = document.querySelector("#register-form");
@@ -69,5 +64,4 @@ submitBtn.addEventListener("click", (event) => {
             }
         })();
     }
-    event.preventDefault();
 });
