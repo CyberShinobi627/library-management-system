@@ -10,9 +10,9 @@
 </head>
 <body>
     <div class="nav-left">
-        <a href="/keeper/profile">Dashboard</a>
+        <a href="{{ url_for('keeper_profile') }}">Dashboard</a>
         <a class="keeper-nav" href="{{ url_for('show_books') }}">Show all Books</a>
-        <a class="keeper-nav" href="/keeper/add-book">Add Book</a>
+        <a class="keeper-nav" href="{{ url_for('add_book') }}">Add Book</a>
         <a class="keeper-nav" href="{{ url_for('update_qty') }}">Update Quantity</a>
         <a class="keeper-nav" href="{{ url_for('pending_orders') }}">Pending Orders</a>
         <a class="keeper-nav" href="{{ url_for('borrowed_books') }}">Borrowed Books</a>
@@ -23,6 +23,7 @@
         </div>
     </div>
     <br><br>
+    <script src="/js/keeper-base.js"></script>
     {% block content %}
     {% endblock %}
 </body>

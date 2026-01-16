@@ -11,18 +11,16 @@
 
 <body>
     <div class="nav-left">
-        <a href="/user/profile">Dashboard</a>
+        <a class="active" href="{{ url_for('user_profile') }}">Dashboard</a>
         <a class="user-nav" href="{{ url_for('borrow_book') }}">Borrow a Book</a>
         <a class="user-nav" href="{{ url_for('check_borrow') }}">Check my Borrowings</a>
         <a class="user-nav" href="{{ url_for('user_history') }}">History</a>
         <div id="nav-right">
-            <a href="/logout">logout</a>
+            <a href="{{ url_for('logout') }}">logout</a>
         </div>
     </div>
     <br><br>
-    <!-- <a href="/profile/hello"></a>
-    <a href="/profile/"></a> -->
-    
+    <script src="/js/user-base.js"></script>
     {% block content %}
     {% endblock %}
 </body>
