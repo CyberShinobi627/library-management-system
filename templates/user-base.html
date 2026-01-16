@@ -5,32 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/css/user-base.css">
     {% block style %}{% endblock %}
-    <style>
-        a{
-            text-decoration: none;
-        }
-
-        /* .nav-left{
-            float: left;
-        } */
-        
-        .orders{
-            margin: 150px;
-        }
-
-        #nav-right{
-            float: right;
-        }
-    </style>
 </head>
 
 <body>
     <div class="nav-left">
         <a href="/user/profile">Dashboard</a>
-        <a class="orders" href="{{ url_for('borrow_book') }}">Borrow a Book</a>
-        <a class="orders" href="{{ url_for('check_borrow') }}">Check my Borrowings</a>
-        <a class="orders" href="{{ url_for('user_history') }}">History</a>
+        <a class="user-nav" href="{{ url_for('borrow_book') }}">Borrow a Book</a>
+        <a class="user-nav" href="{{ url_for('check_borrow') }}">Check my Borrowings</a>
+        <a class="user-nav" href="{{ url_for('user_history') }}">History</a>
         <div id="nav-right">
             <a href="/logout">logout</a>
         </div>

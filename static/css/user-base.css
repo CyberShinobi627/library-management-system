@@ -1,0 +1,11 @@
+a{
+    text-decoration: none;
+}
+
+.user-nav{
+    margin: 150px;
+}
+
+#nav-right{
+    float: right;
+}
