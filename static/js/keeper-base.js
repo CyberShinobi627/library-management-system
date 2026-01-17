@@ -1,6 +1,6 @@
 const navLeft = document.querySelector(".nav-left");
 const navs = navLeft.children;
-const navPath = location.pathname;
+const urlPath = location.pathname;
 for(const nav of navs){
-    nav.classList.toggle("active", (navPath === nav.pathname) || (navPath === "/keeper/" && nav.pathname === "/keeper/profile/"));
+    nav.classList.toggle("active", (urlPath === nav.pathname) || (urlPath === "/keeper/" && nav.pathname === "/keeper/profile/"));
 }

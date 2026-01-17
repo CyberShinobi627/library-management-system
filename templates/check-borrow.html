@@ -38,7 +38,7 @@
                                     <td>{{ "N/A" if status == 1 else borrow[3] }}</td>
                                     <td>{{ "N/A" if status == 1 else borrow[4] }}</td>
                                     <td>{{ "N/A" if status == 1 else borrow[5] }}</td>
-                                    <td>{{ "Pending" if status == 1 else "Borrowed" }}</td>
+                                    <td>{{ "Pending" if status == 1 else "Collected" }}</td>
                                     <td>{% if status == 1 %}<button type="button">Remove</button>{% endif %}</td>
                                 </tr>
                             {% endfor %}

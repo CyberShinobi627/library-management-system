@@ -36,15 +36,15 @@ searchInput.addEventListener("input", (searchKey) => {
         const qty = book[3];
         if(bid in orderInfoJson){
             const status = orderInfoJson[bid];
-            if(status == 1){
+            if(status === 1){
                 button.style.backgroundColor = "red";
                 button.innerText = "Remove";
             }
-            else if(status == 2){
+            else if(status === 2){
                 button.disabled = true;
                 button.style.opacity = 0.6;
                 button.style.cursor = "not-allowed";
-                button.innerText = "Borrowed";
+                button.innerText = "Collected";
             }
         }
         else if(!qty){
@@ -53,7 +53,7 @@ searchInput.addEventListener("input", (searchKey) => {
         }
 
         button.addEventListener("click", () => {
-            if(button.innerText == "Add"){
+            if(button.innerText === "Add"){
                 button.style.backgroundColor = "red";
                 button.innerText = "Remove";
                 (async () => {
