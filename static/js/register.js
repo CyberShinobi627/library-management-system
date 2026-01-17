@@ -33,7 +33,8 @@ userInput.addEventListener("input", (event) => {
 });
 
 const submitBtn = document.querySelector("#submit-btn");
-submitBtn.addEventListener("click", () => {
+submitBtn.addEventListener("click", (event) => {
+    event.preventDefault();
     const userSearch = userInput.value;
     if(userSearch < 3){
         userMsg.innerText = "Username must contain atleast 3 characters";

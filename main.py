@@ -29,15 +29,14 @@ login_manager.login_view = "login"
 # login_manager.login_message = ''
 
 class User(UserMixin):
-    def __init__(self, uid, firstname, lastname, email, username, password, isadmin, iskeeper):
+    def __init__(self, uid, firstname, lastname, email, username, password, role):
         self.uid = uid
         self.firstname = firstname
         self.lastname = lastname
         self.email = email
         self.username = username
         self.password = password
-        self.isadmin = isadmin
-        self.iskeeper = iskeeper
+        self.role = role
     
     def get_id(self):
         return self.uid
@@ -58,15 +57,15 @@ def load_user(uid):
 @app.before_request
 def admin_access():
     if request.path.startswith("/admin/"):
-        if not (current_user.is_authenticated and current_user.isadmin):
+        if not (current_user.is_authenticated and current_user.role == 1):
             abort(403)
     
     elif request.path.startswith("/keeper/"):
-        if not (current_user.is_authenticated and current_user.iskeeper):
+        if not (current_user.is_authenticated and current_user.role == 2):
             abort(403)
 
     elif request.path.startswith("/user"):
-        if (current_user.is_authenticated and current_user.isadmin) or (current_user.is_authenticated and current_user.iskeeper):
+        if (current_user.is_authenticated and current_user.role == 1) or (current_user.is_authenticated and current_user.role == 2):
             abort(403)
 
 @app.route('/', methods=("GET", "POST"))
@@ -113,7 +112,6 @@ def check_user():
 
         cur.close()
     
-    # print(bool(user_exist))
     return jsonify({"user_exist": bool(user_exist)})
 
 @app.route("/login/", methods=("GET", "POST"))
@@ -133,12 +131,11 @@ def login():
                 new_user = User(*row)
                 login_user(new_user)
 
-                isadmin = row[6]
-                iskeeper = row[7]
-                if isadmin:
+                role = row[-1]
+                if role == 1:
                     return redirect(url_for("admin"))
                 
-                elif iskeeper:
+                elif role == 2:
                     return redirect(url_for("keeper_profile"))
                 
                 return redirect(url_for("user_profile"))
@@ -148,10 +145,10 @@ def login():
                 return redirect(url_for("login"))
     
     elif current_user.is_authenticated:
-        if current_user.isadmin:
+        if current_user.role == 1:
             return redirect(url_for("admin"))
         
-        elif current_user.iskeeper:
+        elif current_user.role == 2:
             return redirect(url_for("keeper_profile"))
         
         return redirect(url_for("user_profile"))
@@ -191,7 +188,7 @@ def add_book():
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            query = "insert into books (bname, bauthor, qty, rate) values (?, ?, ?, ?)"
+            query = "insert into books (bname, bauthor, qty, price) values (?, ?, ?, ?)"
             cur.execute(query, tuple(new_book))
 
             conn.commit()
@@ -224,11 +221,11 @@ def update_qty():
             cur = conn.cursor()
 
             if operation == "add":
-                update_query = "update books set qty = qty+? where bid = ?"
+                update_query = "update books set qty = qty + ? where bid = ?"
                 flash("Quantity added successfully.")
             
             elif operation == "remove":
-                update_query = "update books set qty = qty-? where bid = ?"
+                update_query = "update books set qty = qty - ? where bid = ?"
                 flash("Quantity removed successfully.")
             
             cur.execute(update_query, (qty, bid))
@@ -318,7 +315,7 @@ def reject_order():
         update_orders = "update orders set status = 3 where oid = ?"
         cur.execute(update_orders, (oid,))
 
-        update_books = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+        update_books = "update books set qty = qty + 1 where bid = (select bid from orders where oid = ?)"
         cur.execute(update_books, (oid,))
 
         conn.commit()
@@ -352,7 +349,7 @@ def return_book():
         update_orders = "update orders set status = 4 where oid = ?"
         cur.execute(update_orders, (oid,))
 
-        update_books = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+        update_books = "update books set qty = qty + 1 where bid = (select bid from orders where oid = ?)"
         cur.execute(update_books, (oid,))
 
         conn.commit()
@@ -420,7 +417,7 @@ def add_borrow():
             insert_query = "insert into orders (uid, bid, status) values (?, ?, 1)"
             cur.execute(insert_query, (current_user.uid, bid))
 
-            update_query = "update books set qty = qty-1 where bid = ? and qty != 0"
+            update_query = "update books set qty = qty - 1 where bid = ? and qty != 0"
             cur.execute(update_query, (bid,))
 
             conn.commit()
@@ -451,7 +448,7 @@ def remove_borrow():
         with sqlite3.connect("library.db") as conn:
             cur = conn.cursor()
 
-            update_query = "update books set qty = qty+1 where bid = (select bid from orders where oid = ?)"
+            update_query = "update books set qty = qty + 1 where bid = (select bid from orders where oid = ?)"
             cur.execute(update_query, (oid,))
 
             delete_query = "delete from orders where oid = ?"
@@ -471,7 +468,7 @@ def remove_borrow():
             cur.execute(bid_query, (book_name, book_author))
             bid = cur.fetchone()[0]
 
-            update_query = "update books set qty = qty+1 where bid = ?"
+            update_query = "update books set qty = qty + 1 where bid = ?"
             cur.execute(update_query, (bid,))
 
             delete_query = "delete from orders where uid = ? and bid = ? and status = 1"
